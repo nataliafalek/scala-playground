@@ -1,36 +1,89 @@
 package pl.nfalek
 
-object game2048 {
-    def main(args: Array[String]): Unit = {
-      play_game(Board.initializeBoard())
-     // println(Console.BLUE + "2")
-    // val colors_map = Map (
-    //   0 -> (Console.YELLOW + "0"),
-    //   2 -> (Console.BLUE + "2"),
-    //   4 -> (Console.RED + "4")
-     //)
-      //println(List(0, 2, 4).map(aa => colors_map(aa)), List(2, 2, 4).map(aa => colors_map(aa)))
-      //println(colors_map(0))
-    }
+import java.io.FileInputStream
 
-    def play_game(b: Board): Board = {
-     // val new_board = Board.initializeBoard()
-      println(b)
-      val line = scala.io.StdIn.readLine()
-      val fucking_Board = if (line == "a") {
-        play_game(b.shiftMatrixLeft().play)
-      } else if (line == "d") {
-        play_game(b.shiftMatrixRight().play)
-      } else if (line == "w") {
-        play_game(b.shiftMatrixUp().play)
-      } else if (line == "s") {
-        play_game(b.shiftMatrixDown().play)
-      } else {
-       play_game(b)
-      }
-      println(fucking_Board)
-     fucking_Board
+import sun.audio.{AudioPlayer, AudioStream}
+
+object game2048 {
+  def main(args: Array[String]): Unit = {
+    // open the sound file as a Java input stream
+    val gongFile = "/home/nfalek/Muzyka/jingle_cats_mp3.AU"
+    val in = new FileInputStream(gongFile)
+
+    // create an audiostream from the inputstream
+    val audioStream = new AudioStream(in)
+
+    // play the audio clip with the audioplayer class
+    AudioPlayer.player.start(audioStream)
+    Thread.sleep(1000)
+    println(
+      """
+        |_____   _______________________   _____________________  ___________________
+        |___  | / /__    |__  __/___  _/   __  ____/__    |__   |/  /__  ____/_  ___/
+        |__   |/ /__  /| |_  /   __  /     _  / __ __  /| |_  /|_/ /__  __/  _____ \
+        |_  /|  / _  ___ |  /   __/ /      / /_/ / _  ___ |  /  / / _  /___  ____/ /
+        |/_/ |_/  /_/  |_/_/    /___/      \____/  /_/  |_/_/  /_/  /_____/  /____/
+        |
+
+     """.stripMargin)
+    Thread.sleep(2200)
+    println(
+      """
+        | _______ _     _  ______ _____ _______ _______ _______ _______ _______      _    _ _______  ______ _______ _____  _____  __   _
+        | |       |_____| |_____/   |   |______    |    |  |  | |_____| |______       \  /  |______ |_____/ |______   |   |     | | \  |
+        | |_____  |     | |    \_ __|__ ______|    |    |  |  | |     | ______|        \/   |______ |    \_ ______| __|__ |_____| |  \_|
+        |
+
+      """.stripMargin)
+    Thread.sleep(3000)
+    println(
+      """
+        |          {_}
+        |          / \
+        |         /   \
+        |        /_____\
+        |      {`_______`}
+        |       // . . \\
+        |      (/(__7__)\)
+        |      |'-' = `-'|
+        |      |         |
+        |      /\       /\
+        |     /  '.   .'  \
+        |    /_/   `"`   \_\
+        |   {__}###[_]###{__}
+        |   (_/\_________/\_)
+        |       |___|___|
+        |  nati  |--|--|
+        |       (__)`(__)
+
+      """.stripMargin)
+
+    Thread.sleep(2000)
+
+    println("Sterowane: asdw")
+
+    play_game(Board.initializeBoard())
+  }
+  var score = 0
+
+  def play_game(b: Board): Board = {
+    var wynik = println("Twoj wynik to: " + score)
+    println(b)
+    val line = scala.io.StdIn.readLine()
+    val fucking_Board = if (line == "a") {
+      play_game(b.shiftMatrixLeft().play)
+    } else if (line == "d") {
+      play_game(b.shiftMatrixRight().play)
+    } else if (line == "w") {
+      play_game(b.shiftMatrixUp().play)
+    } else if (line == "s") {
+      play_game(b.shiftMatrixDown().play)
+    } else {
+      play_game(b)
     }
+    println(fucking_Board)
+    fucking_Board
+  }
 
   case class Board(rows: List[List[Int]]) {
     override def toString(): String = {
@@ -45,20 +98,14 @@ object game2048 {
         128 -> Console.GREEN
       ).withDefaultValue("")
       rows.map(row => row.map(aa => colors_map(aa) + aa).mkString("\t")).mkString("\n")
-      //println(colors_map(2))
-      //println(colors_map(4))
-      //aa.map(bb => colors_map(bb))
     }
 
     def play: Board = {
-       if (hasAnySpaceLeft()) {
-         Board(rows).insertFieldRandomly()
-       } else {
-         throw new GameOverException
-       }
- //       throw new GameOverException
- //     }
-//      throw new GameOverException
+      if (hasAnySpaceLeft()) {
+        Board(rows).insertFieldRandomly()
+      } else {
+        throw new GameOverException
+      }
     }
 
     def shiftZero(row: List[Int]): List[Int] = {
@@ -80,23 +127,29 @@ object game2048 {
       val a3 = row2(3)
 
       if (a0 == a1 && a0 != a2 && a2 != a3) {
+        score += a0 + a1
         List(0, a0 + a1, a2, a3)
       } else if (a0 == a1 && a0 != a2 && a2 == a3) {
+        score += a0 + a1 + a3 + a3
         List(0, 0, a0 + a1, a2 + a3)
       } else if (a1 == a2 && a1 != a0 && a1 != a3) {
+        score += a1 + a2
         List(0, a0, a1 + a2, a3)
       } else if (a2 == a3 && a2 != a1 && a0!=a1) {
+        score += a2 + a3
         List(0, a0, a1, a2 + a3)
       } else if (a0 == a1 && a1 ==a2 && a2 != a3) {
+        score += a1 + a2
         List(0, a0, a1 + a2, a3)
       } else if (a1==a2 && a2==a3 && a0 != a1) {
+        score += a2 + a3
         List(0, a0, a1, a2 + a3)
       } else if (a0==a1 && a1==a2 && a2 == a3) {
+        score += a0 + a1 + a2 + a3
         List (0, 0, a0 + a1, a2 + a3)
       } else {
         row2
       }
-
     }
 
     def shiftLeft(row: List[Int]): List[Int] = {
@@ -104,19 +157,19 @@ object game2048 {
     }
 
     def shiftMatrixRight(): Board = {
-        Board(rows.map(aa => shiftRight(aa)))
+      Board(rows.map(aa => shiftRight(aa)))
     }
 
     def shiftMatrixLeft(): Board = {
-        Board(rows.map(aa => shiftLeft(aa)))
+      Board(rows.map(aa => shiftLeft(aa)))
     }
 
     def shiftMatrixUp(): Board = {
-        Board(rows.transpose.map(aa => shiftLeft(aa)).transpose)
+      Board(rows.transpose.map(aa => shiftLeft(aa)).transpose)
     }
 
     def shiftMatrixDown(): Board = {
-        Board(rows.transpose.map(aa => shiftRight(aa)).transpose)
+      Board(rows.transpose.map(aa => shiftRight(aa)).transpose)
     }
 
     def insertFieldRandomly(): Board = {
@@ -134,7 +187,6 @@ object game2048 {
       val random_row = listWithIndex._2
 
       Board(rows.updated(random_column, rows(random_column).updated(random_row, random_number)))
-
     }
 
     def hasAnySpaceLeft(): Boolean = {
@@ -148,6 +200,5 @@ object game2048 {
       Board(rows).insertFieldRandomly().insertFieldRandomly()
     }
   }
-
   class GameOverException extends Exception
 }
