@@ -10,25 +10,31 @@ object gameTowerHanoi {
   }
 
   def playGame(t: Towers): Towers = {
+    var score = println("\nMoves: " + move + "\n")
     println(t)
     if (t.youStillPlay(t)) {
-      println("\n Twój ruch: \n")
+      println("\nFrom tower: ")
       val lineFrom = scala.io.StdIn.readLine()
+      println("To tower: ")
       val lineTo = scala.io.StdIn.readLine()
-      val new_Towers = Towers(t.towers, lineFrom.toInt, lineTo.toInt).updatedTower()
+      val new_Towers = Towers(t.towers, lineFrom.toInt -1, lineTo.toInt -1).updatedTower()
+      move += 1
       playGame(new_Towers)
+
     }
     else {
-      println("Wygrałeś, zacznij od nowa")
+      println("You win!")
       Towers.start
     }
   }
+
+  var move = 0
 
   case class Towers(towers: List[List[Int]], fromTower: Int, toTower: Int) {
 
     override def toString(): String = {
       val towers_map = Map(
-        0 -> "  *  ",
+        0 -> "      *  ",
         1 -> "      - ",
         2 -> "     ___  ",
         3 -> "    _____  ",
@@ -37,7 +43,7 @@ object gameTowerHanoi {
         6 -> " ___________ ",
         7 -> "_____________"
       )
-      towers.map(a => a.map(aa => towers_map(aa)).mkString("\n")).mkString("\n\n")
+      towers.map(list => list.map(row => towers_map(row)).mkString("\n")).mkString("\n\n")
     }
 
     def filterIfZero(oneTower: List[Int]): List[(Int, Int)] = {
@@ -66,11 +72,11 @@ object gameTowerHanoi {
           Towers(towers.updated(fromTower, towers(fromTower).updated(indexHeadFromTower, 0)).updated(toTower, towers(toTower).updated(indexLastToTower, valueHeadFromTower)), fromTower, toTower)
         }
         else {
-          println("Zły ruch")
+          println("Bad move! You can not put bigger disc on the smaller!")
           Towers(towers, fromTower, toTower)
         }
       } else {
-        println("Zły ruch")
+        println("Bad move! Try again")
         Towers(towers, fromTower, toTower)
       }
     }
@@ -78,15 +84,18 @@ object gameTowerHanoi {
     def youStillPlay(t: Towers): Boolean = {
       t.towers.last != Towers.start.towers.head
     }
-
   }
 
   object Towers {
-    println("Liczba krążków (max. 7): ")
-    val krazki = scala.io.StdIn.readLine().toInt
-
-    val start = Towers(List(List.range(1, krazki + 1), List.fill(krazki)(0), List.fill(krazki)(0)), 0, 0)
+    println("Number of discs (3-7): ")
+    val discs = scala.io.StdIn.readLine().toInt
+    val start = if (discs < 3 || discs > 7) {
+      println("Please enter the correct number")
+      val newDiscs = scala.io.StdIn.readLine().toInt
+      Towers(List(List.range(1, newDiscs + 1), List.fill(newDiscs)(0), List.fill(newDiscs)(0)), 0, 0)
+    } else {
+      Towers(List(List.range(1, discs + 1), List.fill(discs)(0), List.fill(discs)(0)), 0, 0)
+    }
   }
-
 }
 
