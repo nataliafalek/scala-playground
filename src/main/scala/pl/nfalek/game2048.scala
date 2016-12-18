@@ -6,16 +6,13 @@ import sun.audio.{AudioPlayer, AudioStream}
 
 object game2048 {
   def main(args: Array[String]): Unit = {
-    // open the sound file as a Java input stream
-    val gongFile = "/home/nfalek/Muzyka/jingle_cats_mp3.AU"
-    val in = new FileInputStream(gongFile)
-
-    // create an audiostream from the inputstream
+    //favorite song
+    val catMUsic = "/home/nfalek/Muzyka/jingle_cats_mp3.AU"
+    val in = new FileInputStream(catMUsic)
     val audioStream = new AudioStream(in)
-
-    // play the audio clip with the audioplayer class
     AudioPlayer.player.start(audioStream)
     Thread.sleep(1000)
+    //favorite effects
     println(
       """
         |_____   _______________________   _____________________  ___________________
@@ -25,7 +22,7 @@ object game2048 {
         |/_/ |_/  /_/  |_/_/    /___/      \____/  /_/  |_/_/  /_/  /_____/  /____/
         |
 
-     """.stripMargin)
+      """.stripMargin)
     Thread.sleep(2200)
     println(
       """
@@ -59,66 +56,80 @@ object game2048 {
       """.stripMargin)
 
     Thread.sleep(2000)
-
-    println("Sterowane: asdw")
-
-    play_game(Board.initializeBoard())
+    println("Sterowanie: asdw")
+    playGame(GameState(Board.initializeBoard(), true))
   }
   var score = 0
 
-  def play_game(b: Board): Board = {
+  //recursion function which shows your score and checks if you can move, next shifts a board in the right direction and inserts random number
+  def playGame(b: GameState): GameState = {
     var wynik = println("Twoj wynik to: " + score)
-    println(b)
+    println(b.gameBoard)
     val line = scala.io.StdIn.readLine()
-    val fucking_Board = if (line == "a") {
-      play_game(b.shiftMatrixLeft().play)
-    } else if (line == "d") {
-      play_game(b.shiftMatrixRight().play)
-    } else if (line == "w") {
-      play_game(b.shiftMatrixUp().play)
-    } else if (line == "s") {
-      play_game(b.shiftMatrixDown().play)
+    if (b.canPlay) {
+      val fuckingBoard = if (line == "a") {
+        playGame(GameState(b.gameBoard.shiftMatrixLeft(), b.canPlay).gameBoard.play)
+      } else if (line == "d") {
+        playGame(GameState(b.gameBoard.shiftMatrixRight(), b.canPlay).gameBoard.play)
+      } else if (line == "w") {
+        playGame(GameState(b.gameBoard.shiftMatrixUp(), b.canPlay).gameBoard.play)
+      } else if (line == "s") {
+        playGame(GameState(b.gameBoard.shiftMatrixDown(), b.canPlay).gameBoard.play)
+      } else {
+        playGame(b)
+      }
+      fuckingBoard
     } else {
-      play_game(b)
+      println(b.gameBoard)
+      println(
+        """
+          |##    ##  #######  ##     ##     ######  ##     ##  ######  ##    ##
+          | ##  ##  ##     ## ##     ##    ##    ## ##     ## ##    ## ##   ##
+          |  ####   ##     ## ##     ##    ##       ##     ## ##       ##  ##
+          |   ##    ##     ## ##     ##     ######  ##     ## ##       #####
+          |   ##    ##     ## ##     ##          ## ##     ## ##       ##  ##
+          |   ##    ##     ## ##     ##    ##    ## ##     ## ##    ## ##   ##
+          |   ##     #######   #######      ######   #######   ######  ##    ##
+        """.stripMargin)
+      GameState(b.gameBoard, false)
     }
-    println(fucking_Board)
-    fucking_Board
   }
 
   case class Board(rows: List[List[Int]]) {
-    override def toString(): String = {
-      val colors_map = Map (
+    override def toString: String = {
+      val colorsMap = Map(
         0 -> Console.YELLOW,
         2 -> Console.BLUE,
         4 -> Console.RED,
         8 -> Console.MAGENTA,
         16 -> Console.CYAN,
         32 -> Console.WHITE,
-        64 -> Console.BLINK,
-        128 -> Console.GREEN
+        64 -> Console.GREEN
       ).withDefaultValue("")
-      rows.map(row => row.map(aa => colors_map(aa) + aa).mkString("\t")).mkString("\n")
+      rows.map(row => row.map(aa => colorsMap(aa) + aa).mkString("\t")).mkString("\n")
     }
 
-    def play: Board = {
-      if (hasAnySpaceLeft()) {
-        Board(rows).insertFieldRandomly()
+    //method to check if you can still play
+    def play: GameState = {
+      if (hasAnySpaceLeft) {
+        GameState(Board(rows).insertFieldRandomly(), true)
       } else {
-        throw new GameOverException
+        GameState(this, false)
       }
     }
 
+    //method which move all zeros at the beginning of the list
     def shiftZero(row: List[Int]): List[Int] = {
-      val listWithoutZero = row.filter(aa => aa!=0)
-      val rowWithoutZeroSize = row.filter(aa => aa != 0).size
+      val rowWithoutZero = row.filter(aa => aa != 0)
+      val rowWithoutZeroSize = row.count(aa => aa != 0)
       if (rowWithoutZeroSize < row.size) {
         val listOfZeroSize = row.size - rowWithoutZeroSize
-        List.fill(listOfZeroSize)(0) ++ listWithoutZero
+        List.fill(listOfZeroSize)(0) ++ rowWithoutZero
       } else {
         row
       }
     }
-
+    //method to move row right; it contains all cases of adding the same numbers
     def shiftRight(row: List[Int]): List[Int] = {
       val row2 = shiftZero(row)
       val a0 = row2(0)
@@ -135,18 +146,18 @@ object game2048 {
       } else if (a1 == a2 && a1 != a0 && a1 != a3) {
         score += a1 + a2
         List(0, a0, a1 + a2, a3)
-      } else if (a2 == a3 && a2 != a1 && a0!=a1) {
+      } else if (a2 == a3 && a2 != a1 && a0 != a1) {
         score += a2 + a3
         List(0, a0, a1, a2 + a3)
-      } else if (a0 == a1 && a1 ==a2 && a2 != a3) {
+      } else if (a0 == a1 && a1 == a2 && a2 != a3) {
         score += a1 + a2
         List(0, a0, a1 + a2, a3)
-      } else if (a1==a2 && a2==a3 && a0 != a1) {
+      } else if (a1 == a2 && a2 == a3 && a0 != a1) {
         score += a2 + a3
         List(0, a0, a1, a2 + a3)
-      } else if (a0==a1 && a1==a2 && a2 == a3) {
+      } else if (a0 == a1 && a1 == a2 && a2 == a3) {
         score += a0 + a1 + a2 + a3
-        List (0, 0, a0 + a1, a2 + a3)
+        List(0, 0, a0 + a1, a2 + a3)
       } else {
         row2
       }
@@ -172,26 +183,26 @@ object game2048 {
       Board(rows.transpose.map(aa => shiftRight(aa)).transpose)
     }
 
+    //adding random number (2 or 4) to matrix
     def insertFieldRandomly(): Board = {
       val random = scala.util.Random
-      val random_number = (random.nextInt(3-1) + 1)*2
+      val randomNumber = (random.nextInt(2) + 1) * 2
       val rowsWithIndex = rows.map(aa => aa.zipWithIndex)
-      val matrixWithIndex = rowsWithIndex.zipWithIndex.map { case (rowWithIndex, rowIndex) =>
-        rowWithIndex.filter( { case (value, idx) => value == 0 })
-          .map { case (value, idx) => (rowIndex, idx)}
-      }.flatten
+      val matrixWithIndex = rowsWithIndex.zipWithIndex.flatMap { case (rowWithIndex, rowIndex) =>
+        rowWithIndex.filter({ case (value, idx) => value == 0 })
+          .map { case (value, idx) => (rowIndex, idx) }
+      }
 
-      val random_place = random.nextInt(matrixWithIndex.size)
-      val listWithIndex = matrixWithIndex(random_place)
-      val random_column = listWithIndex._1
-      val random_row = listWithIndex._2
+      val randomPlace = random.nextInt(matrixWithIndex.size)
+      val listWithIndex = matrixWithIndex(randomPlace)
+      val randomColumn = listWithIndex._1
+      val randomRow = listWithIndex._2
 
-      Board(rows.updated(random_column, rows(random_column).updated(random_row, random_number)))
+      Board(rows.updated(randomColumn, rows(randomColumn).updated(randomRow, randomNumber)))
     }
 
-    def hasAnySpaceLeft(): Boolean = {
-      rows.flatten.filter(aa => aa == 0).size > 0
-    }
+    //checking if you have place to move
+    def hasAnySpaceLeft: Boolean = rows.flatten.contains(0)
   }
 
   object Board {
@@ -200,5 +211,7 @@ object game2048 {
       Board(rows).insertFieldRandomly().insertFieldRandomly()
     }
   }
-  class GameOverException extends Exception
+  //class with flag if you can still play
+  case class GameState(gameBoard: Board, canPlay: Boolean)
+
 }
